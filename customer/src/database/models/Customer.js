@@ -3,19 +3,23 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const CustomerSchema = new Schema({
+    username: String,
     email: String,
     password: String,
+    birthday: String,
+    gender: String,
+    role: { type: String, enum: ["user","admin"], default: 'user' },
     salt: String,
     phone: String,
-    address:[
-        { type: Schema.Types.ObjectId, ref: 'address', require: true }
-    ],
     cart: [
         {
             product:{
                 _id: { type: String, require: true },
-                _name: { type: String },
-                banner: { type: String },
+                name: { type: String },
+                imageCover: { type: String },
+                size: {type: String},
+                color: {type: String},
+                brand: { type: String },
                 price: {type: Number }
             },
             unit: { type: Number, require: true }
@@ -23,18 +27,19 @@ const CustomerSchema = new Schema({
     ],
     wishlist:[
         { 
-            _id: { type: String, require: true} ,
-            name: { type: String },
-            description: { type: String },
-            banner: { type: String },
-            availble: { type: Boolean },
-            price: { type: Number }
+          _id: { type: String, require: true },
+          name: { type: String },
+          imageCover: { type: String },
+          size: {type: String},
+          color: {type: String},
+          brand: { type: String },
+          price: {type: Number }
         }
     ],
     orders: [ 
         {
             _id: { type: String, require: true },
-            amount: { type: String },
+            amount: { type: Number },
             date: { type: Date, default: Date.now() }
         }
     ]

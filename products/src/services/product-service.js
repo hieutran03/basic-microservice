@@ -5,93 +5,107 @@ const { APIError } = require('../utils/app-errors');
 // All Business logic will be here
 class ProductService {
 
-    constructor(){
-        this.repository = new ProductRepository();
+  constructor() {
+    this.repository = new ProductRepository();
+  }
+
+  async CreateProduct(productInputs) {
+    try {
+
+      const productResult = await this.repository.CreateProduct(productInputs)
+      return FormateData(productResult);
+    } catch (err) {
+      console.log(err);
+
+      throw new APIError('Cannot create product')
+    }
+  }
+
+  async GetProducts() {
+    try {
+      const products = await this.repository.Products();
+
+      let categories = {};
+
+      products.map(({ type }) => {
+        categories[type] = type;
+      });
+
+      return FormateData({
+        products,
+        categories: Object.keys(categories),
+      })
+
+    } catch (err) {
+      throw new APIError('Data Not found')
+    }
+  }
+
+
+  async GetProductDescription(productId) {
+    try {
+      const product = await this.repository.FindById(productId);
+      return FormateData(product)
+    } catch (err) {
+      throw new APIError('Data Not found')
+    }
+  }
+
+  async GetProductsByCategory(category) {
+    try {
+      const products = await this.repository.FindByCategory(category);
+      return FormateData(products)
+    } catch (err) {
+      throw new APIError('Data Not found')
     }
 
-    async CreateProduct(productInputs){
-        try{
-            const productResult = await this.repository.CreateProduct(productInputs)
-            return FormateData(productResult);
-        }catch(err){
-            throw new APIError('Data Not found')
-        }
+  }
+
+  async GetSelectedProducts(selectedIds) {
+    try {
+      const products = await this.repository.FindSelectedProducts(selectedIds);
+      return FormateData(products);
+    } catch (err) {
+      throw new APIError('Data Not found')
     }
-    
-    async GetProducts(){
-        try{
-            const products = await this.repository.Products();
-    
-            let categories = {};
-    
-            products.map(({ type }) => {
-                categories[type] = type;
-            });
+  }
+
+  async GetProductById(productId) {
+    try {
+      return await this.repository.FindById(productId);
+    } catch (err) {
+      throw new APIError('Data Not found')
+    }
+  }
+
+  async GetProcductPayload(userId, { productId, qty, size, color }, event) {
+    const product = await this.repository.FindById(productId);
+    if (product) {
+      const {_id, name, unit, price, brand, imageCover} = product;
+      const payload = {
+        event: event,
+        data: {
+          userId,
+          product:{
+            _id,
+            name,
+            imageCover,
+            size,
+            color,
+            price,
+            unit,
+            brand,
             
-            return FormateData({
-                products,
-                categories:  Object.keys(categories) ,
-            })
-
-        }catch(err){
-            throw new APIError('Data Not found')
+          },
+          qty,
         }
+      }
+      return FormateData(payload);
+    } else {
+      return FormateData({ error: 'No product available' });
     }
+  }
 
-
-    async GetProductDescription(productId){
-        try {
-            const product = await this.repository.FindById(productId);
-            return FormateData(product)
-        } catch (err) {
-            throw new APIError('Data Not found')
-        }
-    }
-
-    async GetProductsByCategory(category){
-        try {
-            const products = await this.repository.FindByCategory(category);
-            return FormateData(products)
-        } catch (err) {
-            throw new APIError('Data Not found')
-        }
-
-    }
-
-    async GetSelectedProducts(selectedIds){
-        try {
-            const products = await this.repository.FindSelectedProducts(selectedIds);
-            return FormateData(products);
-        } catch (err) {
-            throw new APIError('Data Not found')
-        }
-    }
-
-    async GetProductById(productId){
-        try {
-            return await this.repository.FindById(productId);
-        } catch (err) {
-            throw new APIError('Data Not found')
-        }
-    }
-
-    async GetProcductPayload(userId, {productId, qty}, event){
-        const product = await this.repository.FindById(productId);
-        if(product){
-            const payload = {
-                event: event,
-                data: {
-                    userId,
-                    product,
-                    qty,
-                }
-            }
-            return FormateData(payload);
-        }else{
-            return FormateData({error: 'No product available'});
-        }
-    }
-     
 }
 
 module.exports = ProductService;

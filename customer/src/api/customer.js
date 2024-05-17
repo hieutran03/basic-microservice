@@ -8,8 +8,8 @@ module.exports = (app, channel) => {
 
   app.post("/signup", async (req, res, next) => {
     try {
-      const { email, password, phone } = req.body;
-      const { data } = await service.SignUp({ email, password, phone });
+      const { username,email, password } = req.body;
+      const { data } = await service.SignUp({username, email, password});
       return res.json(data);
     } catch (err) {
       next(err);
@@ -28,24 +28,6 @@ module.exports = (app, channel) => {
     }
   });
 
-  app.post("/address", UserAuth, async (req, res, next) => {
-    try {
-      const { _id } = req.user;
-
-      const { street, postalCode, city, country } = req.body;
-
-      const { data } = await service.AddNewAddress(_id, {
-        street,
-        postalCode,
-        city,
-        country,
-      });
-
-      return res.json(data);
-    } catch (err) {
-      next(err);
-    }
-  });
 
   app.get("/profile", UserAuth, async (req, res, next) => {
     try {

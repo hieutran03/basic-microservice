@@ -11,9 +11,11 @@ module.exports = (app, channel) => {
     app.post('/product/create', async(req,res,next) => {
         
         try {
-            const { name, desc, type, unit,price, available, suplier, banner } = req.body; 
+            // const { name, description, type, unit,price, available, suplier, banner } = req.body; 
+            const { name, description, category, unit, price, inStock, brand, imageCover, size }= req.body; 
+            console.log(req.body);
             // validation
-            const { data } =  await service.CreateProduct({ name, desc, type, unit,price, available, suplier, banner });
+            const { data } =  await service.CreateProduct({ name, description, category, unit, price, inStock, brand, imageCover, size });
             return res.json(data);
             
         } catch (err) {
@@ -22,12 +24,12 @@ module.exports = (app, channel) => {
         
     });
 
-    app.get('/category/:type', async(req,res,next) => {
+    app.get('/category/:category', async(req,res,next) => {
         
-        const type = req.params.type;
+        const category = req.params.category;
         
         try {
-            const { data } = await service.GetProductsByCategory(type)
+            const { data } = await service.GetProductsByCategory(category)
             return res.status(200).json(data);
 
         } catch (err) {
@@ -101,7 +103,7 @@ module.exports = (app, channel) => {
         const { _id } = req.user;
         
         try {   
-            const { data } = await service.GetProcductPayload(_id, {productId: req.body._id, qty: req.body.qty}, 'ADD_TO_CART');
+            const { data } = await service.GetProcductPayload(_id, {productId: req.body._id, qty: req.body.qty, size: req.body.size, color: req.body.color }, 'ADD_TO_CART');
             
             // PushlishCustomerService(data);
             PublishMessage(channel, SHOPPING_BINDING_KEY, JSON.stringify(data));

@@ -7,14 +7,13 @@ const {
 
 //Dealing with data base operations
 class CustomerRepository {
-  async CreateCustomer({ email, password, phone, salt }) {
+  async CreateCustomer({ username, email, password, salt }) {
     try {
       const customer = new CustomerModel({
+        username,
         email,
         password,
         salt,
-        phone,
-        address: [],
       });
       const customerResult = await customer.save();
       return customerResult;
@@ -27,32 +26,6 @@ class CustomerRepository {
     }
   }
 
-  async CreateAddress({ _id, street, postalCode, city, country }) {
-    try {
-      const profile = await CustomerModel.findById(_id);
-
-      if (profile) {
-        const newAddress = new AddressModel({
-          street,
-          postalCode,
-          city,
-          country,
-        });
-
-        await newAddress.save();
-
-        profile.address.push(newAddress);
-      }
-
-      return await profile.save();
-    } catch (err) {
-      throw new APIError(
-        "API Error",
-        STATUS_CODES.INTERNAL_ERROR,
-        "Error on Create Address"
-      );
-    }
-  }
 
   async FindCustomer({ email }) {
     try {
@@ -69,7 +42,7 @@ class CustomerRepository {
 
   async FindCustomerById({ id }) {
     try {
-      const existingCustomer = await CustomerModel.findById(id).populate("address");
+      const existingCustomer = await CustomerModel.findById(id);
       return existingCustomer;
     } catch (err) {
       throw new APIError(
@@ -82,9 +55,7 @@ class CustomerRepository {
 
   async Wishlist(customerId) {
     try {
-      const profile = await CustomerModel.findById(customerId).populate(
-        "wishlist"
-      );
+      const profile = await CustomerModel.findById(customerId)
 
       return profile.wishlist;
     } catch (err) {
@@ -95,11 +66,10 @@ class CustomerRepository {
       );
     }
   }
-
-  async AddWishlistItem(customerId, { _id, name, desc, price, available, banner }) {
-    const product = { _id, name, desc, price, available, banner };
+  async AddWishlistItem(customerId, { _id, name, price, color, imageCover, size, brand }) {
+    const product = { _id, name, price, color, imageCover, size, brand };
     try {
-      const profile = await CustomerModel.findById(customerId).populate("wishlist");
+      const profile = await CustomerModel.findById(customerId);
 
       if (profile) {
         let wishlist = profile.wishlist;
@@ -136,12 +106,12 @@ class CustomerRepository {
     }
   }
 
-  async AddCartItem(customerId, { _id, name, price, banner }, qty, isRemove) {
+  async AddCartItem(customerId, { _id, name, price, imageCover, size, color, brand }, qty, isRemove) {
     try {
-      const profile = await CustomerModel.findById(customerId).populate("cart");
+      const profile = await CustomerModel.findById(customerId);
       if (profile) {
         const cartItem = {
-          product: { _id, name, price, banner },
+          product: { _id, name, price, imageCover, size, color, brand },
           unit: qty,
         };
 

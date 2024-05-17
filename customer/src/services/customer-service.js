@@ -39,7 +39,7 @@ class CustomerService {
 
   async SignUp(userInputs) {
 
-    const { email, password, phone } = userInputs;
+    const { username, email, password } = userInputs;
 
     try {
       // create salt
@@ -51,7 +51,12 @@ class CustomerService {
 
       let userPassword = await GeneratePassword(password, salt);
 
-      const existingCustomer = await this.repository.CreateCustomer({ email, password: userPassword, phone, salt });
+      const existingCustomer = await this.repository.CreateCustomer({
+        username,
+        email,
+        password: userPassword,
+        salt,
+      });
 
       const token = await GenerateSignature({ email: email, _id: existingCustomer._id });
 
@@ -63,20 +68,6 @@ class CustomerService {
 
   }
 
-  async AddNewAddress(_id, userInputs) {
-
-    const { street, postalCode, city, country } = userInputs;
-
-    try {
-      const addressResult = await this.repository.CreateAddress({ _id, street, postalCode, city, country })
-      return FormateData(addressResult);
-
-    } catch (err) {
-      throw new APIError('Data Not found', err)
-    }
-
-
-  }
 
   async GetProfile(id) {
 
@@ -144,7 +135,7 @@ class CustomerService {
 
   async SubscribeEvents(payload) {
     payload = JSON.parse(payload);
-    
+
     const { event, data } = payload;
 
     const { userId, product, order, qty } = data;
