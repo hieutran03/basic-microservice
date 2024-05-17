@@ -1,7 +1,15 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const axios = require("axios");
-const { APP_SECRET } = require("../config");
+const amqplib = require("amqplib");
+
+// const axios = require("axios");
+
+const { 
+  APP_SECRET,
+  MESSAGE_BROKER_URL,
+  EXCHANGE_NAME,
+  QUEUE_NAME
+} = require("../config");
 
 //Utility functions
 module.exports.GenerateSalt = async () => {
@@ -50,14 +58,52 @@ module.exports.FormateData = (data) => {
   }
 };
 
-module.exports.PushlishCustomerService = async (payload) => {
-  axios.post("http://localhost:8000/customer/app-events", {
-    payload
-  });
-}
+// module.exports.PushlishCustomerService = async (payload) => {
+//   axios.post("http://localhost:8000/customer/app-events", {
+//     payload
+//   });
+// }
 
-module.exports.PushlishShoppingService = async (payload) => {
-  axios.post("http://localhost:8000/shopping/app-events", {
-    payload
-  });
-}
+// module.exports.PushlishShoppingService = async (payload) => {
+//   axios.post("http://localhost:8000/shopping/app-events", {
+//     payload
+//   });
+// }
+
+
+//Message Broker
+
+module.exports.CreateChannel = async () => {
+  try {
+    const connection = await amqplib.connect(MESSAGE_BROKER_URL);
+    const channel = await connection.createChannel();
+    await channel.assertExchange(EXCHANGE_NAME, "direct", false);
+    return channel;
+  } catch (err) {
+    throw err;
+  }
+};
+
+module.exports.PublishMessage = async(channel, binding_key, msg) => {
+  try{
+    await channel.publish(EXCHANGE_NAME, binding_key, Buffer.from(msg));
+    console.log("Sent: ", msg);
+  }catch(err){
+    throw err;
+  }
+  
+};
+
+module.exports.SubcribeMessage = async(channel, service, binding_key) => {
+  const appQueue = await channel.assertQueue(QUEUE_NAME);
+  
+  channel.bindQueue(appQueue.queue, EXCHANGE_NAME, binding_key);
+
+  channel.consume(appQueue.queue, (data) => {
+    console.log('recieved data');
+    console.log(data.content.toString());
+    channel.ack(data);
+  })
+};
+
+

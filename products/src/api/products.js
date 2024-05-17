@@ -1,8 +1,9 @@
 const ProductService = require('../services/product-service');
-const { PushlishCustomerService, PushlishShoppingService } = require("../utils");
+const { PublishMessage } = require("../utils");
+const { SHOPPING_BINDING_KEY, CUSTOMER_BINDING_KEY } = require("../config")
 const UserAuth = require('./middlewares/auth')
 
-module.exports = (app) => {
+module.exports = (app, channel) => {
     
     const service = new ProductService();
 
@@ -69,7 +70,7 @@ module.exports = (app) => {
         try {
             const {data} =  await service.GetProcductPayload(_id, {productId: req.body._id}, 'ADD_TO_WISHLIST');
 
-            PushlishCustomerService(data);
+            PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
             
             return res.status(200).json(data.data.product);
         } catch (err) {
@@ -84,7 +85,10 @@ module.exports = (app) => {
 
         try {
             const {data} =  await service.GetProcductPayload(_id, {productId}, 'REMOVE_FROM_WISHLIST');
-            PushlishCustomerService(data);
+
+            // PushlishCustomerService(data);
+            PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
+
             return res.status(200).json(data.data.product);
         } catch (err) {
             next(err)
@@ -99,8 +103,12 @@ module.exports = (app) => {
         try {   
             const { data } = await service.GetProcductPayload(_id, {productId: req.body._id, qty: req.body.qty}, 'ADD_TO_CART');
             
-            PushlishCustomerService(data);
-            PushlishShoppingService(data);
+            // PushlishCustomerService(data);
+            PublishMessage(channel, SHOPPING_BINDING_KEY, JSON.stringify(data));
+
+            // PushlishShoppingService(data);
+            PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
+            
             const response = {
                 product: data.data.product,
                 unit: data.data.qty,
@@ -120,8 +128,12 @@ module.exports = (app) => {
 
         try {
             const { data } = await service.GetProcductPayload(_id, {productId}, 'REMOVE_FROM_CART');
-            PushlishCustomerService(data);
-            PushlishShoppingService(data);
+            // PushlishCustomerService(data);
+            PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
+
+            // PushlishShoppingService(data);
+            PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
+
             const response = {
                 product: data.data.product,
                 unit: data.data.qty,
@@ -137,7 +149,7 @@ module.exports = (app) => {
         //check validation
         
         try {
-            const { data} = await service.GetProducts();        
+            const { data } = await service.GetProducts();        
             return res.status(200).json(data);
         } catch (error) {    
             next(err)
